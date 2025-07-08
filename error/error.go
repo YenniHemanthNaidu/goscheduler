@@ -22,6 +22,7 @@ package error
 import (
 	"encoding/json"
 	"net/http"
+
 	"github.com/golang/glog"
 	"github.com/myntra/goscheduler/constants"
 )
@@ -42,6 +43,8 @@ func NewError(code int, err error) AppError {
 const (
 	InvalidDataCode        = 400
 	DataNotFound           = 404
+	Conflict               = 409
+	UnprocessableEntity    = 422
 	TooManyRequests        = 429
 	InvalidAppId           = 4001
 	DeactivatedApp         = 4002
@@ -85,6 +88,10 @@ func Handle(w http.ResponseWriter, r *http.Request, err AppError) {
 		w.WriteHeader(http.StatusBadRequest)
 	case TooManyRequests:
 		w.WriteHeader(http.StatusTooManyRequests)
+	case UnprocessableEntity:
+		w.WriteHeader(http.StatusUnprocessableEntity)
+	case Conflict:
+		w.WriteHeader(http.StatusConflict)
 	default:
 		w.WriteHeader(http.StatusInternalServerError)
 	}

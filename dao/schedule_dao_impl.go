@@ -1174,3 +1174,53 @@ func (s *ScheduleDaoImpl) actionIfRequired(app store.App, schedules []store.Sche
 
 	return nil
 }
+
+// UpdateRecurringScheduleStatus updates the status of a recurring schedule
+// If status is Paused, it also deletes all future executions similar to deleteRecurringSchedule
+func (sdi *ScheduleDaoImpl) UpdateRecurringScheduleStatus(schedule store.Schedule, status store.Status) (store.Schedule, error) {
+	batch := gocql.NewBatch(gocql.LoggedBatch)
+
+	updateById := "UPDATE recurring_schedules_by_id " +
+		"SET status = ? " +
+		"WHERE schedule_id = ?"
+	batch.Query(updateById, status, schedule.ScheduleId)
+
+	updateByPartition := "UPDATE recurring_schedules_by_partition " +
+		"SET status = ? " +
+		"WHERE partition_id = ? " +
+		"AND schedule_id = ? " +
+		"AND app_id = ?"
+	batch.Query(updateByPartition, status, schedule.PartitionId, schedule.ScheduleId, schedule.AppId)
+
+	// If pausing, delete all future executions
+	if status == store.Paused {
+		runs, _, err := sdi.getFutureRuns(schedule.ScheduleId, -1, nil)
+		if err != nil {
+			return schedule, err
+		}
+
+		deleteFromRuns := "DELETE FROM recurring_schedule_runs " +
+			"WHERE " +
+			"schedule_time_group = ? " +
+			"AND parent_schedule_id = ?"
+
+		for _, run := range runs {
+			batch.Query(
+				deleteFromRuns,
+				run.ScheduleGroup*constants.SecondsToMillis,
+				schedule.ScheduleId)
+
+			batch.Query(
+				deleteFromSchedule,
+				run.AppId,
+				run.PartitionId,
+				run.ScheduleGroup*constants.SecondsToMillis,
+				run.ScheduleId)
+		}
+	}
+
+	err := sdi.Session.ExecuteBatch(batch)
+	schedule.Status = status
+
+	return schedule, err
+}
