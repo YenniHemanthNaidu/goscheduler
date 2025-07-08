@@ -54,21 +54,21 @@ rm "$check_response_file"
     rm "$response_file"
 fi
 
-# Activate the app
-# activate_app_endpoint="/goscheduler/apps/$app_id/activate"
-# echo "--- 2. Activating App: POST $activate_app_endpoint ---"
-# sleep 1    
-# response_file=$(mktemp)
-# status_code=$(curl -s -w "%{http_code}" -o "$response_file" -X POST "http://$host$activate_app_endpoint" -H 'Content-Type: application/json')
+#Activate the app
+activate_app_endpoint="/goscheduler/apps/$app_id/activate"
+echo "--- 2. Activating App: POST $activate_app_endpoint ---"
+sleep 1    
+response_file=$(mktemp)
+status_code=$(curl -s -w "%{http_code}" -o "$response_file" -X POST "http://$host$activate_app_endpoint" -H 'Content-Type: application/json')
 
-# if [ $? -eq 0 ] && [ "$status_code" -eq 200 ]; then
-#     echo "✓ Successfully activated app"
-# else
-#     echo "✗ Failed to activate app"
-#     echo "Response:"
-#     cat "$response_file" && echo
-# fi
-# rm "$response_file"
+if [ $? -eq 0 ] && [ "$status_code" -eq 200 ]; then
+    echo "✓ Successfully activated app"
+else
+    echo "✗ Failed to activate app"
+    echo "Response:"
+    cat "$response_file" && echo
+fi
+rm "$response_file"
 
 # JSON body for creating a recurring schedule that can be paused/resumed
 create_recurring_schedule_data='{"appId":"'$app_id'","payload":"{}","cronExpression":"*/1 * * * *","callback":{"type":"http","details":{"url":"http://127.0.0.1:8080/goscheduler/healthcheck","method":"GET","headers":{"Content-Type":"application/json","Accept":"application/json"}}}}'
