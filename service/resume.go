@@ -72,6 +72,7 @@ func (s *Service) ResumeSchedule(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the schedule is recurring
 	if !schedule.IsRecurring() {
+		glog.Info("schedule with id %s is not recurring", uuid)
 		s.recordRequestStatus(constants.ResumeSchedule, constants.Fail)
 		errs = append(errs, fmt.Sprintf("Schedule with id: %s is not a recurring schedule", uuid))
 		er.Handle(w, r, er.NewError(er.UnprocessableEntity, errors.New(strings.Join(errs, ","))))
@@ -80,6 +81,7 @@ func (s *Service) ResumeSchedule(w http.ResponseWriter, r *http.Request) {
 
 	// Check if not paused
 	if schedule.Status != store.Paused {
+		glog.Info("schedule with id %s is not paused", uuid)
 		s.recordRequestStatus(constants.ResumeSchedule, constants.Fail)
 		errs = append(errs, fmt.Sprintf("Schedule with id: %s is not paused", uuid))
 		er.Handle(w, r, er.NewError(er.Conflict, errors.New(strings.Join(errs, ","))))

@@ -97,16 +97,15 @@ func (m *MockScheduleDaoForResume) UpdateRecurringScheduleStatus(schedule store.
 
 // Add a function to get a properly mocked service handler for resume tests
 func setupMocksForResumeTests() *Service {
-	// Create a new instance of MockScheduleDaoForResume
-	service := &Service{
-		Config: testConfiguration(),
-	}
-	service.ScheduleDao = &MockScheduleDaoForResume{}
+	// Setup basic service structure
+	sh := setupMocks()
+
+	sh.ScheduleDao = &MockScheduleDaoForResume{}
 
 	// Reset test tracking counters
 	UpdateRecurringScheduleStatusCallCount = 0
 
-	return service
+	return sh
 }
 
 func TestService_ResumeSchedule(t *testing.T) {

@@ -56,7 +56,7 @@ func (s *Service) PauseSchedule(w http.ResponseWriter, r *http.Request) {
 	schedule, err := s.ScheduleDao.GetSchedule(uuid)
 	if err != nil {
 		if err == gocql.ErrNotFound {
-			glog.Infof("No schedule with id %s found", uuid)
+			glog.Infof("No schedule with id :  %s found", uuid)
 			s.recordRequestStatus(constants.PauseSchedule, constants.Fail)
 
 			errs = append(errs, fmt.Sprintf("Schedule with id: %s not found", uuid))
@@ -74,6 +74,7 @@ func (s *Service) PauseSchedule(w http.ResponseWriter, r *http.Request) {
 	// Check if the schedule is recurring
 	if !schedule.IsRecurring() {
 		s.recordRequestStatus(constants.PauseSchedule, constants.Fail)
+		glog.Info("schedule with id %s is not recurring", uuid)
 		errs = append(errs, fmt.Sprintf("Schedule with id: %s is not a recurring schedule", uuid))
 		er.Handle(w, r, er.NewError(er.UnprocessableEntity, errors.New(strings.Join(errs, ","))))
 		return
@@ -82,6 +83,8 @@ func (s *Service) PauseSchedule(w http.ResponseWriter, r *http.Request) {
 	// Check if already paused
 	if schedule.Status == store.Paused {
 		s.recordRequestStatus(constants.PauseSchedule, constants.Success)
+
+		glog.Info("Schedule with id %s is already paused", uuid)
 		status := Status{
 			StatusCode:    constants.SuccessCode200,
 			StatusMessage: "Schedule already paused",

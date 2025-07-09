@@ -26,7 +26,6 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/gorilla/mux"
-	"github.com/myntra/goscheduler/conf"
 	"github.com/myntra/goscheduler/dao"
 	"github.com/myntra/goscheduler/store"
 )
@@ -43,25 +42,6 @@ var UpdateRecurringScheduleStatusCallCount int
 var LastUpdateRecurringScheduleStatusArgs struct {
 	Schedule store.Schedule
 	Status   store.Status
-}
-
-// testConfiguration creates a test configuration for testing
-func testConfiguration() *conf.Configuration {
-	return &conf.Configuration{
-		Cluster: conf.ClusterConfig{
-			Address: "127.0.0.1:9091",
-		},
-		CronConfig: conf.CronConfig{
-			App: "Athena",
-		},
-		AppLevelConfiguration: conf.AppLevelConfiguration{
-			FutureScheduleCreationPeriod: 7,
-			FiredScheduleRetentionPeriod: 1,
-			PayloadSize:                  1024,
-			HttpRetries:                  2,
-			HttpTimeout:                  500,
-		},
-	}
 }
 
 func (m *MockScheduleDaoForPause) GetSchedule(uuid gocql.UUID) (store.Schedule, error) {
@@ -136,18 +116,14 @@ func (m *MockScheduleDaoForPause) UpdateRecurringScheduleStatus(schedule store.S
 // Add a function to get a properly mocked service handler for pause tests
 func setupMocksForPauseTests() *Service {
 	// Setup basic service structure
-	config := testConfiguration()
-	service := &Service{
-		Config: config,
-	}
+	sh := setupMocks()
 
-	// Add the mock ScheduleDao
-	service.ScheduleDao = &MockScheduleDaoForPause{}
+	sh.ScheduleDao = &MockScheduleDaoForPause{}
 
 	// Reset test tracking counters
 	UpdateRecurringScheduleStatusCallCount = 0
 
-	return service
+	return sh
 }
 
 func TestService_PauseSchedule(t *testing.T) {
