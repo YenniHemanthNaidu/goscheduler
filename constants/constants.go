@@ -29,6 +29,8 @@ const (
 	Running                                  = "Running"
 	EmptyString                              = ""
 	DeleteSchedule                           = "DeleteSchedule"
+	PauseSchedule                            = "PauseSchedule"
+	ResumeSchedule                           = "ResumeSchedule"
 	GetSchedule                              = "GetSchedule"
 	GetScheduleRuns                          = "GetScheduleRuns"
 	GetAppSchedule                           = "GetAppSchedule"
