@@ -1195,7 +1195,7 @@ func (sdi *ScheduleDaoImpl) UpdateRecurringScheduleStatus(schedule store.Schedul
 	// If pausing, delete all future executions
 	if status == store.Paused {
 		runs, _, err := sdi.getFutureRuns(schedule.ScheduleId, -1, nil)
-		glog.Info("future runs for schedule id : %s  %+v", schedule.ScheduleId, runs)
+		glog.Infof("future runs for schedule id : %s  %+v", schedule.ScheduleId, runs)
 		if err != nil {
 			return schedule, err
 		}
@@ -1222,7 +1222,7 @@ func (sdi *ScheduleDaoImpl) UpdateRecurringScheduleStatus(schedule store.Schedul
 
 	err := sdi.Session.ExecuteBatch(batch)
 
-	glog.Info("updated status of schedule: %+v", schedule)
+	glog.Infof("updated status of schedule: %+v", schedule)
 	schedule.Status = status
 
 	return schedule, err

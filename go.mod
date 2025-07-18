@@ -1,4 +1,4 @@
-module github.com/YenniHemanthNaidu/goscheduler
+module github.com/myntra/goscheduler
 
 go 1.17
 

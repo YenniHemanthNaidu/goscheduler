@@ -74,7 +74,7 @@ func (s *Service) PauseSchedule(w http.ResponseWriter, r *http.Request) {
 	// Check if the schedule is recurring
 	if !schedule.IsRecurring() {
 		s.recordRequestStatus(constants.PauseSchedule, constants.Fail)
-		glog.Info("schedule with id %s is not recurring", uuid)
+		glog.Infof("schedule with id %s is not recurring", uuid)
 		errs = append(errs, fmt.Sprintf("Schedule with id: %s is not a recurring schedule", uuid))
 		er.Handle(w, r, er.NewError(er.UnprocessableEntity, errors.New(strings.Join(errs, ","))))
 		return
@@ -84,7 +84,7 @@ func (s *Service) PauseSchedule(w http.ResponseWriter, r *http.Request) {
 	if schedule.Status == store.Paused {
 		s.recordRequestStatus(constants.PauseSchedule, constants.Success)
 
-		glog.Info("Schedule with id %s is already paused", uuid)
+		glog.Infof("Schedule with id %s is already paused", uuid)
 		status := Status{
 			StatusCode:    constants.SuccessCode200,
 			StatusMessage: "Schedule already paused",
@@ -99,6 +99,16 @@ func (s *Service) PauseSchedule(w http.ResponseWriter, r *http.Request) {
 				Status: status,
 				Data:   data,
 			})
+		return
+	}
+
+	// Check if schedule is scheduled
+	if schedule.Status != store.Scheduled {
+		s.recordRequestStatus(constants.PauseSchedule, constants.Fail)
+		glog.Infof("Schedule with id %s is not scheduled", uuid)
+
+		errs = append(errs, fmt.Sprintf("Schedule with id: %s is not in Scheduled state", uuid))
+		er.Handle(w, r, er.NewError(er.UnprocessableEntity, errors.New(strings.Join(errs, ","))))
 		return
 	}
 
@@ -121,6 +131,7 @@ func (s *Service) PauseSchedule(w http.ResponseWriter, r *http.Request) {
 		StatusType:    constants.Success,
 		TotalCount:    1,
 	}
+
 	data := ScheduleData{
 		Schedule: updatedSchedule,
 	}
