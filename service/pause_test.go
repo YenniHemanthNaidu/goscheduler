@@ -85,6 +85,15 @@ func (m *MockScheduleDaoForPause) GetSchedule(uuid gocql.UUID) (store.Schedule, 
 			Status:         store.Scheduled,
 		}, nil
 
+	case "66666666-6666-6666-6666-666666666666":
+		// Recurring but currently not in SCHEDULED state (e.g., DELETED)
+		return store.Schedule{
+			ScheduleId:     uuid,
+			AppId:          "testNotScheduled",
+			CronExpression: "0 0 * * *", // Recurring
+			Status:         store.Deleted,
+		}, nil
+
 	default:
 		// Default is a valid recurring schedule
 		return store.Schedule{
@@ -188,6 +197,13 @@ func TestService_PauseSchedule(t *testing.T) {
 			description:        "Should return 200 on successful pause operation",
 			shouldUpdateStatus: true,
 			expectedNewStatus:  store.Paused,
+		},
+		{
+			name:               "NotScheduledStatus",
+			scheduleID:         "66666666-6666-6666-6666-666666666666",
+			wantStatus:         http.StatusOK,
+			description:        "Should return 200 when schedule is not in SCHEDULED state",
+			shouldUpdateStatus: false,
 		},
 	}
 
