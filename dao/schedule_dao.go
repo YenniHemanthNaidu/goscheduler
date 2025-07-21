@@ -20,10 +20,11 @@
 package dao
 
 import (
+	"time"
+
 	"github.com/gocql/gocql"
 	"github.com/myntra/goscheduler/db_wrapper"
 	s "github.com/myntra/goscheduler/store"
-	"time"
 )
 
 type ScheduleDao interface {
@@ -41,4 +42,5 @@ type ScheduleDao interface {
 	OptimizedEnrichSchedule(schedules []s.Schedule) ([]s.Schedule, error)
 	GetCronSchedulesByApp(appId string, status s.Status) ([]s.Schedule, []string)
 	BulkAction(app s.App, partitionId int, scheduleTimeGroup time.Time, status []s.Status, actionType s.ActionType) error
+	UpdateRecurringScheduleStatus(schedule s.Schedule, status s.Status) (s.Schedule, error)
 }

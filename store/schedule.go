@@ -24,13 +24,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/gocql/gocql"
 	"github.com/golang/glog"
 	"github.com/myntra/goscheduler/conf"
 	"github.com/myntra/goscheduler/constants"
 	"github.com/myntra/goscheduler/cron"
 	"github.com/myntra/goscheduler/util"
-	"time"
 )
 
 // Status for schedules in the system
@@ -49,6 +50,7 @@ const (
 	Failure   Status     = "FAILURE"
 	Miss      Status     = "MISS"
 	Error     Status     = "ERROR"
+	Paused    Status     = "PAUSED"
 	Reconcile ActionType = "reconcile"
 	Delete    ActionType = "delete"
 )

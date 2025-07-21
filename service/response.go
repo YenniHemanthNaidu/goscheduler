@@ -188,3 +188,14 @@ type GetAppsResponse struct {
 	Status Status      `json:"status"`
 	Data   GetAppsData `json:"data"`
 }
+
+// Used for pause and resume schedule responses
+type ScheduleResponse struct {
+	Status Status       `json:"status"`
+	Data   ScheduleData `json:"data"`
+}
+
+// Used for pause and resume schedule responses
+type ScheduleData struct {
+	Schedule s.Schedule `json:"schedule"`
+}

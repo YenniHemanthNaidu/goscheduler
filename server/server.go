@@ -20,13 +20,14 @@
 package server
 
 import (
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/gorilla/mux"
 	"github.com/myntra/goscheduler/constants"
 	"github.com/myntra/goscheduler/service"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"log"
-	"net/http"
-	"time"
 )
 
 type Server struct {
@@ -88,6 +89,18 @@ func (s *Server) registerHTTPHandlers() {
 			s.service.GetRuns(w, r)
 		}),
 	).Methods("GET")
+
+	s.router.HandleFunc("/goscheduler/schedules/{scheduleId}/pause",
+		s.monitoringMiddleware(constants.PauseSchedule, func(w http.ResponseWriter, r *http.Request) {
+			s.service.PauseSchedule(w, r)
+		}),
+	).Methods("PUT")
+
+	s.router.HandleFunc("/goscheduler/schedules/{scheduleId}/resume",
+		s.monitoringMiddleware(constants.ResumeSchedule, func(w http.ResponseWriter, r *http.Request) {
+			s.service.ResumeSchedule(w, r)
+		}),
+	).Methods("PUT")
 
 	s.router.HandleFunc("/goscheduler/apps/{appId}/schedules",
 		s.monitoringMiddleware(constants.GetAppSchedule, func(w http.ResponseWriter, r *http.Request) {

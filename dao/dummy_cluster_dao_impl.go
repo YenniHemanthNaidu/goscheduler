@@ -22,6 +22,7 @@ package dao
 import (
 	"errors"
 	"fmt"
+
 	"github.com/gocql/gocql"
 	e "github.com/myntra/goscheduler/cluster_entity"
 	"github.com/myntra/goscheduler/store"
@@ -63,6 +64,10 @@ func (d DummyClusterDaoImpl) GetEntityInfo(id string) e.EntityInfo {
 
 func (d DummyClusterDaoImpl) UpdateEntityStatus(id string, nodeName string, status int) error {
 	return nil
+}
+
+func (d DummyClusterDaoImpl) GetAllEntitiesForApp(appId string) ([]e.EntityInfo, error) {
+	return []e.EntityInfo{}, nil
 }
 
 func (d DummyClusterDaoImpl) GetApp(appName string) (store.App, error) {

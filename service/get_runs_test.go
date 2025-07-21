@@ -20,13 +20,14 @@
 package service
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/gocql/gocql"
 	"github.com/gorilla/mux"
 	"github.com/myntra/goscheduler/cluster"
 	"github.com/myntra/goscheduler/dao"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestService_Runs(t *testing.T) {

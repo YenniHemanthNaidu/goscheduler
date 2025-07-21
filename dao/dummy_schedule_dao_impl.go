@@ -21,10 +21,11 @@ package dao
 
 import (
 	"errors"
+	"time"
+
 	"github.com/gocql/gocql"
 	"github.com/myntra/goscheduler/db_wrapper"
 	s "github.com/myntra/goscheduler/store"
-	"time"
 )
 
 type DummyScheduleDaoImpl struct{}
@@ -210,4 +211,9 @@ func (d *DummyScheduleDaoImpl) GetCronSchedulesByApp(appId string, status s.Stat
 
 func (d *DummyScheduleDaoImpl) BulkAction(app s.App, partitionId int, scheduleTimeGroup time.Time, status []s.Status, actionType s.ActionType) error {
 	return nil
+}
+
+func (d *DummyScheduleDaoImpl) UpdateRecurringScheduleStatus(schedule s.Schedule, status s.Status) (s.Schedule, error) {
+	schedule.Status = status
+	return schedule, nil
 }
