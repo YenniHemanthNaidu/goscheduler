@@ -214,6 +214,26 @@ func convertCallbackToRaw(s *Schedule) ([]byte, error) {
 	return nil, errors.New("nil callback object")
 }
 
+// CreateCallbackFromRawMessage creates a Callback from a json.RawMessage
+func CreateCallbackFromRawMessage(rawMessage json.RawMessage) (Callback, error) {
+	var httpCallback HttpCallback
+	var airbusCallback AirbusCallback
+
+	// First try to unmarshal as HTTPCallback
+	err := json.Unmarshal(rawMessage, &httpCallback)
+	if err == nil {
+		return &httpCallback, nil // Return pointer - required for interface implementation
+	}
+
+	// Then try to unmarshal as AirbusCallback
+	err = json.Unmarshal(rawMessage, &airbusCallback)
+	if err == nil {
+		return &airbusCallback, nil // Return pointer - required for interface implementation
+	}
+
+	return nil, errors.New("invalid callback format")
+}
+
 func (s Schedule) IsRecurring() bool {
 	return len(s.CronExpression) > 0
 }
