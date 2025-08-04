@@ -49,23 +49,23 @@ type UpdatedScheduleData struct {
 
 // validateImmutableFields ensures that immutable fields (appId, scheduleId, partitionId)
 // are not being modified in the update request
-func (s *Service) validateImmutableFields(input, existing store.Schedule) error {
+func (s *Service) validateImmutableFields(inputSchedule, existing store.Schedule) error {
 	var errs []string
 
-	// Verify that appId is not being modified (only if provided in input)
-	if input.AppId != "" && input.AppId != existing.AppId {
+	// Verify that appId is not being modified (only if provided in inputSchedule)
+	if inputSchedule.AppId != "" && inputSchedule.AppId != existing.AppId {
 		glog.Infof("Cannot modify appId for schedule with id %s", existing.ScheduleId)
 		errs = append(errs, "Cannot modify appId for an existing schedule")
 	}
 
-	// Verify that scheduleId is not being modified (only if provided in input)
-	if !util.IsZeroUUID(input.ScheduleId) && input.ScheduleId != existing.ScheduleId {
+	// Verify that scheduleId is not being modified (only if provided in inputSchedule)
+	if !util.IsZeroUUID(inputSchedule.ScheduleId) && inputSchedule.ScheduleId != existing.ScheduleId {
 		glog.Infof("Cannot modify scheduleId for schedule with id %s", existing.ScheduleId)
 		errs = append(errs, "Cannot modify scheduleId for an existing schedule")
 	}
 
-	// Verify that partitionId is not being modified (only if provided in input)
-	if input.PartitionId != 0 && input.PartitionId != existing.PartitionId {
+	// Verify that partitionId is not being modified (only if provided in inputSchedule)
+	if inputSchedule.PartitionId != existing.PartitionId {
 		glog.Infof("Cannot modify partitionId for schedule with id %s", existing.ScheduleId)
 		errs = append(errs, "Cannot modify partitionId for an existing schedule")
 	}
@@ -81,7 +81,7 @@ func (s *Service) validateImmutableFields(input, existing store.Schedule) error 
 // It supports updating cron expression, payload, headers, callback_type, call_back_url
 func (s *Service) UpdateRecurringSchedule(w http.ResponseWriter, r *http.Request) {
 	var errs []string
-	var input store.Schedule
+	var inputSchedule store.Schedule
 
 	vars := mux.Vars(r)
 	scheduleID := vars["scheduleId"]
@@ -104,7 +104,7 @@ func (s *Service) UpdateRecurringSchedule(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err = json.Unmarshal(b, &input) // input is store.Schedule
+	err = json.Unmarshal(b, &inputSchedule) // inputSchedule is store.Schedule
 	if err != nil {
 		s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Fail)
 		er.Handle(w, r, er.NewError(er.UnmarshalErrorCode, err))
@@ -138,7 +138,7 @@ func (s *Service) UpdateRecurringSchedule(w http.ResponseWriter, r *http.Request
 	}
 
 	// Validate immutable fields
-	if err := s.validateImmutableFields(input, schedule); err != nil {
+	if err := s.validateImmutableFields(inputSchedule, schedule); err != nil {
 		s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Fail)
 		er.Handle(w, r, er.NewError(er.InvalidDataCode, err))
 		return
@@ -154,16 +154,16 @@ func (s *Service) UpdateRecurringSchedule(w http.ResponseWriter, r *http.Request
 	}
 
 	// Update allowed fields
-	if input.CronExpression != "" {
-		schedule.CronExpression = input.CronExpression
+	if inputSchedule.CronExpression != "" {
+		schedule.CronExpression = inputSchedule.CronExpression
 	}
-	if input.Payload != "" {
-		schedule.Payload = input.Payload
+	if inputSchedule.Payload != "" {
+		schedule.Payload = inputSchedule.Payload
 	}
-	if input.CallbackRaw != nil {
-		schedule.CallbackRaw = input.CallbackRaw
+	if inputSchedule.CallbackRaw != nil {
+		schedule.CallbackRaw = inputSchedule.CallbackRaw
 		// Create Callback from CallbackRaw
-		callback, err := store.CreateCallbackFromRawMessage(input.CallbackRaw)
+		callback, err := store.CreateCallbackFromRawMessage(inputSchedule.CallbackRaw)
 		if err != nil {
 			glog.Errorf("Error creating callback from raw message: %v", err)
 			s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Fail)
