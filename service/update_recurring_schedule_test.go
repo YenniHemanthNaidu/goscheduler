@@ -33,6 +33,7 @@ func (m *MockScheduleDaoForUpdate) GetSchedule(uuid gocql.UUID) (store.Schedule,
 			AppId:          "testApp",
 			CronExpression: "", // Empty = non-recurring
 			Status:         store.Scheduled,
+			PartitionId:    0,
 		}, nil
 	case "22222222-2222-2222-2222-222222222222":
 		// U-05: Database error when fetching schedule
@@ -44,6 +45,7 @@ func (m *MockScheduleDaoForUpdate) GetSchedule(uuid gocql.UUID) (store.Schedule,
 			AppId:          "nonExistentApp",
 			CronExpression: "0 0 * * *",
 			Status:         store.Scheduled,
+			PartitionId:    0,
 		}, nil
 	case "44444444-4444-4444-4444-444444444444":
 		// U-09: For testing Cassandra timeout in UpdateRecurringSchedule
@@ -52,6 +54,7 @@ func (m *MockScheduleDaoForUpdate) GetSchedule(uuid gocql.UUID) (store.Schedule,
 			AppId:          "timeoutApp",
 			CronExpression: "0 0 * * *",
 			Payload:        `{"test": "data"}`,
+			PartitionId:    0,
 			Callback: &store.HttpCallback{
 				Type: "http",
 				Details: store.Details{
@@ -68,6 +71,7 @@ func (m *MockScheduleDaoForUpdate) GetSchedule(uuid gocql.UUID) (store.Schedule,
 			AppId:          "testApp",
 			Payload:        `{"foo":"bar"}`,
 			CronExpression: "0 0 * * *",
+			PartitionId:    0,
 			Callback: &store.HttpCallback{
 				Type: "http",
 				Details: store.Details{
@@ -258,17 +262,4 @@ func TestService_UpdateRecurringSchedule(t *testing.T) {
 			}
 		})
 	}
-}
-
-// TestScheduleDaoImpl_UpdateRecurringSchedule tests the DAO implementation
-// This would normally require a mock Cassandra session
-func TestScheduleDaoImpl_UpdateRecurringSchedule(t *testing.T) {
-	t.Run("U-08_BatchBuiltCorrectly", func(t *testing.T) {
-		// This test would verify that the batch contains exactly 3 types of statements:
-		// 1. Update recurring_schedules_by_id
-		// 2. Update recurring_schedules_by_partition
-		// 3. Delete future runs (potentially multiple)
-		// Since we can't easily mock gocql.Batch, this is more of an integration test
-		t.Skip("Requires mock Cassandra session - covered in integration tests")
-	})
 }
