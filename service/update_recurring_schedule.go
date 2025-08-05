@@ -36,17 +36,6 @@ import (
 	"github.com/myntra/goscheduler/util"
 )
 
-// UpdatedScheduleResponse is the response structure for the updateRecurringSchedule endpoint
-type UpdatedScheduleResponse struct {
-	Status Status              `json:"status"`
-	Data   UpdatedScheduleData `json:"data"`
-}
-
-// UpdatedScheduleData contains the updated schedule
-type UpdatedScheduleData struct {
-	Schedule store.Schedule `json:"schedule"`
-}
-
 // validateImmutableFields ensures that immutable fields (appId, scheduleId, partitionId)
 // are not being modified in the update request
 func (s *Service) validateImmutableFields(inputSchedule, existing store.Schedule) error {
@@ -112,15 +101,15 @@ func (s *Service) UpdateRecurringSchedule(w http.ResponseWriter, r *http.Request
 	}
 
 	// First, get the schedule to ensure it exists and is recurring
-	schedule, err := s.ScheduleDao.GetSchedule(uuid)
+	existingSchedule, err := s.ScheduleDao.GetSchedule(uuid)
 	if err != nil {
 		if err == gocql.ErrNotFound {
-			glog.Infof("No schedule with id :  %s found", uuid)
+			glog.Infof("No existing schedule with id :  %s found", uuid)
 			s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Fail)
 			errs = append(errs, fmt.Sprintf("Schedule with id: %s not found", uuid))
 			er.Handle(w, r, er.NewError(er.DataNotFound, errors.New(strings.Join(errs, ","))))
 		} else {
-			glog.Errorf("Error fetching schedule with id %s", uuid)
+			glog.Errorf("Error fetching existing schedule with id %s", uuid)
 			s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Fail)
 			errs = append(errs, err.Error())
 			er.Handle(w, r, er.NewError(er.DataPersistenceFailure, errors.New(strings.Join(errs, ","))))
@@ -128,26 +117,26 @@ func (s *Service) UpdateRecurringSchedule(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Check if the schedule is recurring
-	if !schedule.IsRecurring() {
+	// Check if the existingSchedule is recurring
+	if !existingSchedule.IsRecurring() {
 		s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Fail)
-		glog.Infof("schedule with id %s is not recurring", uuid)
+		glog.Infof("existing schedule with id %s is not recurring", uuid)
 		errs = append(errs, fmt.Sprintf("Schedule with id: %s is not a recurring schedule", uuid))
 		er.Handle(w, r, er.NewError(er.UnprocessableEntity, errors.New(strings.Join(errs, ","))))
 		return
 	}
 
 	// Validate immutable fields
-	if err := s.validateImmutableFields(inputSchedule, schedule); err != nil {
+	if err := s.validateImmutableFields(inputSchedule, existingSchedule); err != nil {
 		s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Fail)
 		er.Handle(w, r, er.NewError(er.InvalidDataCode, err))
 		return
 	}
 
 	// Get the app for validation
-	app, err := s.getApp(schedule.AppId)
+	app, err := s.getApp(existingSchedule.AppId)
 	if err != nil {
-		glog.Errorf("Error fetching app %s: %v", schedule.AppId, err)
+		glog.Errorf("Error fetching app %s: %v", existingSchedule.AppId, err)
 		s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Fail)
 		er.Handle(w, r, err.(er.AppError))
 		return
@@ -155,13 +144,13 @@ func (s *Service) UpdateRecurringSchedule(w http.ResponseWriter, r *http.Request
 
 	// Update allowed fields
 	if inputSchedule.CronExpression != "" {
-		schedule.CronExpression = inputSchedule.CronExpression
+		existingSchedule.CronExpression = inputSchedule.CronExpression
 	}
 	if inputSchedule.Payload != "" {
-		schedule.Payload = inputSchedule.Payload
+		existingSchedule.Payload = inputSchedule.Payload
 	}
 	if inputSchedule.CallbackRaw != nil {
-		schedule.CallbackRaw = inputSchedule.CallbackRaw
+		existingSchedule.CallbackRaw = inputSchedule.CallbackRaw
 		// Create Callback from CallbackRaw
 		callback, err := store.CreateCallbackFromRawMessage(inputSchedule.CallbackRaw)
 		if err != nil {
@@ -171,11 +160,11 @@ func (s *Service) UpdateRecurringSchedule(w http.ResponseWriter, r *http.Request
 			er.Handle(w, r, er.NewError(er.InvalidDataCode, errors.New(strings.Join(errs, ","))))
 			return
 		}
-		schedule.Callback = callback
+		existingSchedule.Callback = callback
 	}
 
-	// Validate the updated schedule
-	validationErrs := schedule.ValidateSchedule(app, s.Config.AppLevelConfiguration)
+	// Validate the updated existingSchedule
+	validationErrs := existingSchedule.ValidateSchedule(app, s.Config.AppLevelConfiguration)
 	if len(validationErrs) > 0 {
 		glog.Errorf("UpdateRecurringSchedule: Validation errors: %v", validationErrs)
 		s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Fail)
@@ -183,22 +172,22 @@ func (s *Service) UpdateRecurringSchedule(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	// Update the schedule
-	updatedSchedule, err := s.ScheduleDao.UpdateRecurringSchedule(schedule)
+	// Update the existingSchedule
+	updatedSchedule, err := s.ScheduleDao.UpdateRecurringSchedule(existingSchedule)
 	if err != nil {
-		glog.Errorf("Error updating recurring schedule with id %s: %v", uuid, err)
+		glog.Errorf("Error updating recurring existingSchedule with id %s: %v", uuid, err)
 		s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Fail)
 		errs = append(errs, err.Error())
 		er.Handle(w, r, er.NewError(er.DataPersistenceFailure, errors.New(strings.Join(errs, ","))))
 		return
 	}
 
-	glog.V(constants.INFO).Infof("Recurring schedule with id %s updated", uuid.String())
+	glog.V(constants.INFO).Infof("Recurring existingSchedule with id %s updated", uuid.String())
 	s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Success)
 
 	status := Status{
 		StatusCode:    constants.SuccessCode200,
-		StatusMessage: "Recurring schedule updated successfully",
+		StatusMessage: "Recurring existingSchedule updated successfully",
 		StatusType:    constants.Success,
 		TotalCount:    1,
 	}

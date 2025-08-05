@@ -21,6 +21,7 @@ package service
 
 import (
 	"github.com/gocql/gocql"
+	"github.com/myntra/goscheduler/store"
 	s "github.com/myntra/goscheduler/store"
 )
 
@@ -198,4 +199,15 @@ type ScheduleResponse struct {
 // Used for pause and resume schedule responses
 type ScheduleData struct {
 	Schedule s.Schedule `json:"schedule"`
+}
+
+// UpdatedScheduleResponse is the response structure for the updateRecurringSchedule endpoint
+type UpdatedScheduleResponse struct {
+	Status Status              `json:"status"`
+	Data   UpdatedScheduleData `json:"data"`
+}
+
+// UpdatedScheduleData contains the updated schedule
+type UpdatedScheduleData struct {
+	Schedule store.Schedule `json:"schedule"`
 }
