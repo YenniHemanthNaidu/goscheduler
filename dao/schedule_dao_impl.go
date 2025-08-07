@@ -1277,12 +1277,6 @@ func (sdi *ScheduleDaoImpl) UpdateRecurringSchedule(schedule store.Schedule) (st
 		"schedule_time_group = ? " +
 		"AND parent_schedule_id = ?"
 
-	deleteFromSchedule := "DELETE FROM schedules " +
-		"WHERE app_id = ? " +
-		"AND partition_id = ? " +
-		"AND schedule_time_group = ? " +
-		"AND schedule_id = ?"
-
 	for _, run := range runs {
 		batch.Query(
 			deleteFromRuns,

@@ -53,12 +53,6 @@ func (s *Service) validateImmutableFields(inputSchedule, existing store.Schedule
 		errs = append(errs, "Cannot modify scheduleId for an existing schedule")
 	}
 
-	// Verify that partitionId is not being modified (only if provided in inputSchedule)
-	if inputSchedule.PartitionId != existing.PartitionId {
-		glog.Infof("Cannot modify partitionId for schedule with id %s", existing.ScheduleId)
-		errs = append(errs, "Cannot modify partitionId for an existing schedule")
-	}
-
 	if len(errs) > 0 {
 		return errors.New(strings.Join(errs, ","))
 	}
