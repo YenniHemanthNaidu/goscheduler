@@ -21,7 +21,6 @@ package service
 
 import (
 	"github.com/gocql/gocql"
-	"github.com/myntra/goscheduler/store"
 	s "github.com/myntra/goscheduler/store"
 )
 
@@ -209,5 +208,5 @@ type UpdatedScheduleResponse struct {
 
 // UpdatedScheduleData contains the updated schedule
 type UpdatedScheduleData struct {
-	Schedule store.Schedule `json:"schedule"`
+	Schedule s.Schedule `json:"schedule"`
 }

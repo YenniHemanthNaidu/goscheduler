@@ -1294,6 +1294,9 @@ func (sdi *ScheduleDaoImpl) UpdateRecurringSchedule(schedule store.Schedule) (st
 	err = sdi.Session.ExecuteBatch(batch)
 	if err != nil {
 		glog.Errorf("Error: %s while updating recurring schedule: %+v", err.Error(), schedule)
+	} else {
+		glog.Infof("Updated schedule with id: %s, updated schedule: %+v", schedule.ScheduleId, schedule)
 	}
+
 	return schedule, err
 }
