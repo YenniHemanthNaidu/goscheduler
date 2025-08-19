@@ -69,8 +69,8 @@ func validateScheduleID(scheduleID string) (gocql.UUID, error) {
 	return uuid, nil
 }
 
-// validateExistingSchedule checks if the existing schedule is valid and recurring
-func (s *Service) validateExistingSchedule(uuid gocql.UUID) (*store.Schedule, store.App, error) {
+// validateExistingScheduleAndExtractApp checks if the existing schedule is valid and recurring
+func (s *Service) validateExistingScheduleAndExtractApp(uuid gocql.UUID) (*store.Schedule, store.App, error) {
 	// Get the existing schedule
 	existingSchedule, err := s.ScheduleDao.GetSchedule(uuid)
 	if err != nil {
@@ -83,6 +83,10 @@ func (s *Service) validateExistingSchedule(uuid gocql.UUID) (*store.Schedule, st
 	// Check if the existingSchedule is recurring
 	if !existingSchedule.IsRecurring() {
 		return nil, store.App{}, er.NewError(er.UnprocessableEntity, fmt.Errorf("schedule with id: %s is not a recurring schedule", uuid))
+	}
+
+	if existingSchedule.Status == store.Deleted {
+		return nil, store.App{}, er.NewError(er.UnprocessableEntity, fmt.Errorf("schedule with id: %s is deleted", uuid))
 	}
 
 	// Get the app for validation
@@ -157,7 +161,7 @@ func (s *Service) UpdateRecurringSchedule(w http.ResponseWriter, r *http.Request
 	}
 
 	// Step 3: Validate existing schedule and get app
-	existingSchedule, app, err := s.validateExistingSchedule(uuid)
+	existingSchedule, app, err := s.validateExistingScheduleAndExtractApp(uuid)
 	if err != nil {
 		s.recordRequestStatus(constants.UpdateRecurringSchedule, constants.Fail)
 		// Check if it's already an AppError, otherwise wrap it
