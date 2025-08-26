@@ -216,19 +216,27 @@ func convertCallbackToRaw(s *Schedule) ([]byte, error) {
 
 // CreateCallbackFromRawMessage creates a Callback from a json.RawMessage
 func CreateCallbackFromRawMessage(rawMessage json.RawMessage) (Callback, error) {
-	var httpCallback HttpCallback
-	var airbusCallback AirbusCallback
-
-	// First try to unmarshal as HTTPCallback
-	err := json.Unmarshal(rawMessage, &httpCallback)
-	if err == nil {
-		return &httpCallback, nil // Return pointer - required for interface implementation
+	// First try to extract type from JSON
+	var typeInfo struct {
+		Type string `json:"type"`
 	}
 
-	// Then try to unmarshal as AirbusCallback
-	err = json.Unmarshal(rawMessage, &airbusCallback)
-	if err == nil {
-		return &airbusCallback, nil // Return pointer - required for interface implementation
+	if err := json.Unmarshal(rawMessage, &typeInfo); err == nil && typeInfo.Type != "" {
+		// Use registry if type is specified
+		if factory, exists := Registry[typeInfo.Type]; exists {
+			callback := factory()
+			if err := json.Unmarshal(rawMessage, callback); err == nil {
+				return callback, nil
+			}
+		}
+	}
+
+	// Fallback to trying known types (for backward compatibility)
+	for _, factory := range Registry {
+		callback := factory()
+		if err := json.Unmarshal(rawMessage, callback); err == nil {
+			return callback, nil
+		}
 	}
 
 	return nil, errors.New("invalid callback format")
@@ -401,7 +409,7 @@ func (s *Schedule) ValidateSchedule(app App, conf conf.AppLevelConfiguration) []
 		errs = append(errs, errStr)
 	}
 
-	if s.IsRecurring() {
+	if len(s.CronExpression) > 0 {
 		if er := validateCronExpression(s.CronExpression); len(er) > 0 {
 			errs = append(errs, er...)
 		}

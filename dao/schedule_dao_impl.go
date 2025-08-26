@@ -1233,39 +1233,38 @@ func (sdi *ScheduleDaoImpl) UpdateRecurringScheduleStatus(schedule store.Schedul
 func (sdi *ScheduleDaoImpl) UpdateRecurringSchedule(schedule store.Schedule) (store.Schedule, error) {
 	batch := gocql.NewBatch(gocql.LoggedBatch)
 
-	// Update recurring_schedules_by_id table
-	batch.Query(
-		"UPDATE recurring_schedules_by_id SET "+
-			"payload = ?, "+
-			"callback_type = ?, "+
-			"callback_details = ?, "+
-			"cron_expression = ?, "+
-			"status = ? "+
-			"WHERE schedule_id = ?",
-		schedule.Payload,
-		schedule.GetCallBackType(),
-		schedule.GetCallbackDetails(),
-		schedule.CronExpression,
-		schedule.Status,
-		schedule.ScheduleId)
+	for _, query := range []string{
+		"INSERT INTO recurring_schedules_by_id (" +
+			"app_id," +
+			"partition_id," +
+			"schedule_id," +
+			"payload," +
+			"callback_type," +
+			"callback_details," +
+			"cron_expression, " +
+			"status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 
-	// Update recurring_schedules_by_partition table
-	batch.Query(
-		"UPDATE recurring_schedules_by_partition SET "+
-			"payload = ?, "+
-			"callback_type = ?, "+
-			"callback_details = ?, "+
-			"cron_expression = ?, "+
-			"status = ? "+
-			"WHERE app_id = ? AND partition_id = ? AND schedule_id = ?",
-		schedule.Payload,
-		schedule.GetCallBackType(),
-		schedule.GetCallbackDetails(),
-		schedule.CronExpression,
-		schedule.Status,
-		schedule.AppId,
-		schedule.PartitionId,
-		schedule.ScheduleId)
+		"INSERT INTO recurring_schedules_by_partition (" +
+			"app_id," +
+			"partition_id," +
+			"schedule_id," +
+			"payload," +
+			"callback_type," +
+			"callback_details," +
+			"cron_expression, " +
+			"status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+	} {
+		batch.Query(
+			query,
+			schedule.AppId,
+			schedule.PartitionId,
+			schedule.ScheduleId,
+			schedule.Payload,
+			schedule.GetCallBackType(),
+			schedule.GetCallbackDetails(),
+			schedule.CronExpression,
+			schedule.Status)
+	}
 
 	// Delete all future runs
 	runs, _, err := sdi.getFutureRuns(schedule.ScheduleId, -1, nil)
